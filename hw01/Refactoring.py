@@ -4,6 +4,8 @@ import collections
 
 from nltk import pos_tag
 
+DEEP_SIZE = 100
+
 
 def flat(list_of_objects):
     """ [(1,2), (3,4)] -> [1, 2, 3, 4]"""
@@ -19,7 +21,8 @@ def is_verb(word_to_check):
 
 
 def get_trees_from_path(target_path, with_file_names=False, with_file_content=False):
-    file_names = get_file_names_from_path(target_path, 100)
+    """Generate list of trees by path"""
+    file_names = get_file_names_from_path(target_path, DEEP_SIZE)
     trees = []
     for file_name in file_names:
         tree = generate_tree_from_file_name(file_name, with_file_names, with_file_content)
@@ -29,6 +32,7 @@ def get_trees_from_path(target_path, with_file_names=False, with_file_content=Fa
 
 
 def get_file_names_from_path(target_path, nesting_size: int):
+    """Get all file names from path"""
     file_names = []
     for dir_name, dirs, files in os.walk(target_path):
         python_files = [file for file in files if file.endswith('.py')]
@@ -39,6 +43,7 @@ def get_file_names_from_path(target_path, nesting_size: int):
 
 
 def generate_tree_from_file_name(file_name, with_file_names, with_file_content):
+    """Create list of trees with additional info if needed"""
     with open(file_name, 'r', encoding='utf-8') as opened_file:
         file_content = opened_file.read()
         parsed_tree = parse_tree_or_none(file_content)
@@ -54,6 +59,7 @@ def generate_tree_from_file_name(file_name, with_file_names, with_file_content):
 
 
 def parse_tree_or_none(file_content):
+    """Try parse tree by file content or return None"""
     try:
         parsed_tree = ast.parse(file_content)
     except SyntaxError as e:
@@ -63,14 +69,17 @@ def parse_tree_or_none(file_content):
 
 
 def get_all_names(tree):
+    """Filter and collect names"""
     return [node.id for node in ast.walk(tree) if isinstance(node, ast.Name)]
 
 
 def get_verbs_from_function_name(function_name):
+    """Filter and collect verbs"""
     return [word for word in function_name.split('_') if is_verb(word)]
 
 
 def get_all_words_in_path(path):
+    """Get all names and separate by names"""
     trees = [t for t in get_trees_from_path(path) if t]
     names = flat([get_all_names(t) for t in trees])
     function_names = [name for name in names if is_function_name(name)]
@@ -78,10 +87,12 @@ def get_all_words_in_path(path):
 
 
 def is_function_name(name):
+    """If name like __function__ - these aren't function you're looking for"""
     return not (name.startswith('__') and name.endswith('__'))
 
 
 def split_snake_case_name_to_words(name):
+    """['this', 'name'] -> this_name"""
     return [n for n in name.split('_') if n]
 
 
@@ -103,6 +114,8 @@ def get_top_functions_names_in_path(path, top_size=10):
     return collections.Counter(nms).most_common(top_size)
 
 
+TOP_SIZE = 200
+
 if __name__ == '__main__':
     wds = []
     projects = [
@@ -117,7 +130,6 @@ if __name__ == '__main__':
         path = os.path.join('.', project)
         wds += get_top_verbs_in_path(path)
 
-    top_size = 200
     print('total %s words, %s unique' % (len(wds), len(set(wds))))
-    for word, occurrence in collections.Counter(wds).most_common(top_size):
+    for word, occurrence in collections.Counter(wds).most_common(TOP_SIZE):
         print(word, occurrence)
