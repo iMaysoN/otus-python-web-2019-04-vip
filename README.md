@@ -6,4 +6,4 @@ Otus
 
 Студент: Иванников Валерий
 
-+ 1) Рефакторинг существующего кода - https://github.com/iMaysoN/otus-python-web-2019-04-vip/tree/master/hw01 
+1) Рефакторинг существующего кода (Done) - https://github.com/iMaysoN/otus-python-web-2019-04-vip/tree/master/hw01 
